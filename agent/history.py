@@ -32,6 +32,11 @@ class ExecutionHistory:
         parameters: str,
         result: str,
     ) -> None:
+        print(
+            "[agent/history.py][ExecutionHistory.add_step][Start] "
+            f"iteration={iteration} plan_summary={plan_summary} server={server} "
+            f"action={action}"
+        )
         self.steps.append(
             StepRecord(
                 iteration=iteration,
@@ -42,10 +47,21 @@ class ExecutionHistory:
                 result=result,
             )
         )
+        print(
+            "[agent/history.py][ExecutionHistory.add_step][End] "
+            f"total_steps={len(self.steps)}"
+        )
 
     def to_prompt(self) -> str:
         """Return a human-readable summary for LLM prompting."""
+        print(
+            "[agent/history.py][ExecutionHistory.to_prompt][Start] "
+            f"steps_count={len(self.steps)}"
+        )
         if not self.steps:
+            print(
+                "[agent/history.py][ExecutionHistory.to_prompt][End] result=(No previous steps executed.)"
+            )
             return "(No previous steps executed.)"
 
         lines: List[str] = []
@@ -62,10 +78,32 @@ class ExecutionHistory:
                     ]
                 )
             )
-        return "\n\n".join(lines)
+        result_text = "\n\n".join(lines)
+        print(
+            "[agent/history.py][ExecutionHistory.to_prompt][End] "
+            f"result_length={len(result_text)}"
+        )
+        return result_text
 
     def __len__(self) -> int:
-        return len(self.steps)
+        print(
+            "[agent/history.py][ExecutionHistory.__len__][Start] "
+            f"steps_count={len(self.steps)}"
+        )
+        length = len(self.steps)
+        print(
+            "[agent/history.py][ExecutionHistory.__len__][End] "
+            f"length={length}"
+        )
+        return length
 
     def __iter__(self):
-        return iter(self.steps)
+        print(
+            "[agent/history.py][ExecutionHistory.__iter__][Start] "
+            f"steps_count={len(self.steps)}"
+        )
+        iterator = iter(self.steps)
+        print(
+            "[agent/history.py][ExecutionHistory.__iter__][End] iterator_created=True"
+        )
+        return iterator

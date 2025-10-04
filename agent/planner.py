@@ -24,11 +24,23 @@ class Planner:
     """Uses an LLM to create execution plans based on user goals."""
 
     def __init__(self, llm: LLMClient, system_prompt: str) -> None:
+        print(
+            "[agent/planner.py][Planner.__init__][Start] "
+            f"llm={llm} system_prompt_length={len(system_prompt)}"
+        )
         self.llm = llm
         self.system_prompt = system_prompt
+        print(
+            "[agent/planner.py][Planner.__init__][End] "
+            f"system_prompt_length={len(self.system_prompt)}"
+        )
 
     def create_plan(self, goal: str, history: ExecutionHistory, mcp_client: MCPClient) -> List[PlanStep]:
         """Generate a plan for the next iteration."""
+        print(
+            "[agent/planner.py][Planner.create_plan][Start] "
+            f"goal={goal} history_steps={len(history)}"
+        )
         history_prompt = history.to_prompt()
         servers_description = mcp_client.describe_servers()
         user_prompt = f"""
@@ -62,9 +74,18 @@ class Planner:
             ],
             temperature=0.2,
         )
-        return self._parse_plan(response)
+        plan = self._parse_plan(response)
+        print(
+            "[agent/planner.py][Planner.create_plan][End] "
+            f"steps_count={len(plan)}"
+        )
+        return plan
 
     def _parse_plan(self, response_text: str) -> List[PlanStep]:
+        print(
+            "[agent/planner.py][Planner._parse_plan][Start] "
+            f"response_length={len(response_text)}"
+        )
         try:
             data = json.loads(response_text)
         except json.JSONDecodeError as exc:
@@ -96,4 +117,8 @@ class Planner:
                     parameters=parameters,
                 )
             )
+        print(
+            "[agent/planner.py][Planner._parse_plan][End] "
+            f"steps_count={len(steps)}"
+        )
         return steps

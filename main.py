@@ -20,22 +20,37 @@ DEFAULT_MCP_SERVERS_PATH = Path("mcp_servers.json")
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
+    print(
+        "[main.py][parse_args][Start] "
+        f"argv={argv}"
+    )
     parser = argparse.ArgumentParser(description="MCP ReAct agent")
     parser.add_argument("goal", nargs="?", help="Goal prompt provided by the user")
     parser.add_argument("--system-prompt", dest="system_prompt", default=str(DEFAULT_SYSTEM_PROMPT_PATH))
     parser.add_argument("--mcp-config", dest="mcp_config", default=str(DEFAULT_MCP_SERVERS_PATH))
     parser.add_argument("--model", dest="model", default="gpt-4.1-mini", help="OpenAI model name")
     parser.add_argument("--log-level", dest="log_level", default="INFO", help="Logging level")
-    return parser.parse_args(argv)
+    parsed = parser.parse_args(argv)
+    print(
+        "[main.py][parse_args][End] "
+        f"goal={parsed.goal} system_prompt={parsed.system_prompt} mcp_config={parsed.mcp_config} "
+        f"model={parsed.model} log_level={parsed.log_level}"
+    )
+    return parsed
 
 
 def main(argv: list[str] | None = None) -> int:
+    print(
+        "[main.py][main][Start] "
+        f"argv={argv}"
+    )
     args = parse_args(argv or sys.argv[1:])
     logging.basicConfig(level=getattr(logging, args.log_level.upper(), logging.INFO))
 
     goal = args.goal or input("目的を入力してください: ").strip()
     if not goal:
         print("目標が入力されませんでした。終了します。")
+        print("[main.py][main][End] status=no_goal")
         return 1
 
     try:
@@ -43,6 +58,10 @@ def main(argv: list[str] | None = None) -> int:
         mcp_registry = load_mcp_servers(Path(args.mcp_config))
     except ConfigurationError as exc:
         logging.error("設定ファイルの読み込みに失敗しました: %s", exc)
+        print(
+            "[main.py][main][End] status=configuration_error "
+            f"error={exc}"
+        )
         return 1
 
     llm = LLMClient(model=args.model)
@@ -54,6 +73,9 @@ def main(argv: list[str] | None = None) -> int:
 
     agent = Agent(planner=planner, executor=executor, evaluator=evaluator, history=history)
     agent.run(goal)
+    print(
+        "[main.py][main][End] status=success goal={goal}"
+    )
     return 0
 
 

@@ -20,8 +20,16 @@ class Evaluator:
     """Determines whether the user's goal has been achieved."""
 
     def __init__(self, llm: LLMClient, system_prompt: str) -> None:
+        print(
+            "[agent/evaluator.py][Evaluator.__init__][Start] "
+            f"llm={llm} system_prompt_length={len(system_prompt)}"
+        )
         self.llm = llm
         self.system_prompt = system_prompt
+        print(
+            "[agent/evaluator.py][Evaluator.__init__][End] "
+            f"system_prompt_length={len(self.system_prompt)}"
+        )
 
     def assess_goal(
         self,
@@ -30,6 +38,10 @@ class Evaluator:
         latest_results: List[MCPActionResult],
     ) -> EvaluationResult:
         """Ask the LLM whether the goal has been satisfied."""
+        print(
+            "[agent/evaluator.py][Evaluator.assess_goal][Start] "
+            f"goal={goal} latest_results_count={len(latest_results)}"
+        )
         latest_summary = "\n\n".join(
             [
                 "\n".join(
@@ -74,4 +86,9 @@ class Evaluator:
 
         achieved = bool(payload.get("goalAchieved"))
         reason = str(payload.get("reason", ""))
-        return EvaluationResult(achieved=achieved, reason=reason)
+        result = EvaluationResult(achieved=achieved, reason=reason)
+        print(
+            "[agent/evaluator.py][Evaluator.assess_goal][End] "
+            f"achieved={result.achieved} reason={result.reason}"
+        )
+        return result

@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
+from .mcp_metadata import get_server_functions
+
 
 @dataclass
 class MCPServerDefinition:
@@ -23,13 +25,26 @@ class ConfigurationError(RuntimeError):
 
 def load_system_prompt(path: Path) -> str:
     """Load the system prompt from the provided path."""
+    print(
+        "[agent/config.py][load_system_prompt][Start] "
+        f"path={path}"
+    )
     if not path.exists():
         raise ConfigurationError(f"System prompt file not found: {path}")
-    return path.read_text(encoding="utf-8").strip()
+    prompt = path.read_text(encoding="utf-8").strip()
+    print(
+        "[agent/config.py][load_system_prompt][End] "
+        f"length={len(prompt)}"
+    )
+    return prompt
 
 
 def load_mcp_servers(path: Path) -> Dict[str, MCPServerDefinition]:
     """Load MCP server definitions from the given JSON file."""
+    print(
+        "[agent/config.py][load_mcp_servers][Start] "
+        f"path={path}"
+    )
     if not path.exists():
         raise ConfigurationError(f"MCP server configuration not found: {path}")
 
@@ -59,5 +74,14 @@ def load_mcp_servers(path: Path) -> Dict[str, MCPServerDefinition]:
             args=[str(arg) for arg in args],
             env={str(key): str(value) for key, value in env.items()},
         )
+        functions = get_server_functions(name)
+        print(
+            "[agent/config.py][load_mcp_servers][Info] "
+            f"server_name={name} functions={functions}"
+        )
 
+    print(
+        "[agent/config.py][load_mcp_servers][End] "
+        f"server_count={len(registry)}"
+    )
     return registry

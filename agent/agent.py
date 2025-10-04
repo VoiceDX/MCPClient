@@ -23,14 +23,27 @@ class Agent:
         history: Optional[ExecutionHistory] = None,
         max_iterations: int = 10,
     ) -> None:
+        print(
+            "[agent/agent.py][Agent.__init__][Start] "
+            f"planner={planner} executor={executor} evaluator={evaluator} "
+            f"history={history} max_iterations={max_iterations}"
+        )
         self.planner = planner
         self.executor = executor
         self.evaluator = evaluator
         self.history = history or ExecutionHistory()
         self.max_iterations = max_iterations
+        print(
+            "[agent/agent.py][Agent.__init__][End] "
+            f"history={self.history} max_iterations={self.max_iterations}"
+        )
 
     def run(self, goal: str) -> None:
         """Run the agent loop for the provided goal."""
+        print(
+            "[agent/agent.py][Agent.run][Start] "
+            f"goal={goal} max_iterations={self.max_iterations}"
+        )
         for iteration in range(1, self.max_iterations + 1):
             logger.info("Planning iteration %s", iteration)
             plan_steps = self.planner.create_plan(goal, self.history, self.executor.mcp_client)
@@ -53,8 +66,16 @@ class Agent:
             if evaluation.achieved:
                 print("✅ 目的を達成しました。")
                 print(f"理由: {evaluation.reason}")
+                print(
+                    "[agent/agent.py][Agent.run][End] "
+                    f"status=achieved iteration={iteration} reason={evaluation.reason}"
+                )
                 return
 
         print("⚠️ 目的を達成できませんでした。追加の指示が必要かもしれません。")
         print("最終的な実行履歴:")
         print(self.history.to_prompt())
+        print(
+            "[agent/agent.py][Agent.run][End] status=not_achieved "
+            f"iterations={self.max_iterations}"
+        )

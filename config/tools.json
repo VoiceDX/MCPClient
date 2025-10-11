@@ -1,0 +1,9 @@
+{
+  "tools": [
+    {
+      "name": "python_runner",
+      "description": "任意のPythonコードを実行し、result変数を出力します。",
+      "script_path": "../tools/python_runner.py"
+    }
+  ]
+}

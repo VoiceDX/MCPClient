@@ -330,19 +330,76 @@ def build_agent(model: str | None = None) -> AutoGenReActAgent:
     """Factory function to create the agent with default tools."""
 
     print(f"[minimal_autogen_agent.py][build_agent] start model={model}")
-    base_path = Path(__file__).parent / "tools"
-    tools = ToolRegistry(
-        [
-            ToolDefinition(
-                name="python_runner",
-                description="任意のPythonコードを実行し、result変数を出力します。",
-                script_path=base_path / "python_runner.py",
-            )
-        ]
-    )
+    config_path = Path(__file__).parent / "config" / "tools.json"
+    tool_definitions = load_tool_definitions(config_path)
+    tools = ToolRegistry(tool_definitions)
     agent = AutoGenReActAgent(model=model or DEFAULT_MODEL, tools=tools)
     print(f"[minimal_autogen_agent.py][build_agent] end agent={agent}")
     return agent
+
+
+def load_tool_definitions(config_path: Path) -> List[ToolDefinition]:
+    """Load tool definitions from a JSON file."""
+
+    print(
+        f"[minimal_autogen_agent.py][load_tool_definitions] start config_path={config_path}"
+    )
+    if not config_path.exists():
+        raise FileNotFoundError(f"Tool configuration file not found: {config_path}")
+
+    # JSON format:
+    # {
+    #   "tools": [
+    #     {
+    #       "name": "tool_name",              # Unique identifier used in plans
+    #       "description": "Human readable",   # Description provided to the LLM
+    #       "script_path": "tools/tool.py"     # Path to the executable Python script
+    #     }
+    #   ]
+    # }
+    with config_path.open("r", encoding="utf-8") as handle:
+        try:
+            payload = json.load(handle)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"Tool configuration file is not valid JSON: {config_path}"
+            ) from exc
+
+    tools_field = payload.get("tools")
+    if not isinstance(tools_field, list) or not tools_field:
+        raise ValueError("Tool configuration must contain a non-empty 'tools' list")
+
+    tool_definitions: List[ToolDefinition] = []
+    for index, entry in enumerate(tools_field):
+        print(
+            f"[minimal_autogen_agent.py][load_tool_definitions] processing index={index} entry={entry}"
+        )
+        if not isinstance(entry, dict):
+            raise ValueError("Each tool definition must be an object")
+
+        name = str(entry.get("name", "")).strip()
+        description = str(entry.get("description", "")).strip()
+        script_path_value = str(entry.get("script_path", "")).strip()
+
+        if not name or not description or not script_path_value:
+            raise ValueError("Tool definitions must include name, description, and script_path")
+
+        script_path = (config_path.parent / script_path_value).resolve()
+        if not script_path.exists():
+            raise FileNotFoundError(f"Tool script does not exist: {script_path}")
+
+        tool_definitions.append(
+            ToolDefinition(
+                name=name,
+                description=description,
+                script_path=script_path,
+            )
+        )
+
+    print(
+        f"[minimal_autogen_agent.py][load_tool_definitions] end tool_definitions={tool_definitions}"
+    )
+    return tool_definitions
 
 
 def parse_args(argv: List[str] | None = None) -> argparse.Namespace:

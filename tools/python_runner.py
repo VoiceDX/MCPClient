@@ -17,17 +17,23 @@ from typing import Any, Dict
 def execute_user_code(code: str) -> str:
     """Execute user-provided code in an isolated namespace."""
 
+    print(f"[python_runner.py][execute_user_code] start code={code}")
     namespace: Dict[str, Any] = {}
     exec(code, {}, namespace)  # noqa: S102 - intentional execution of trusted code
 
     if "result" in namespace:
-        return repr(namespace["result"])
-    return "コードの実行が完了しました (result 変数は定義されていません)。"
+        output = repr(namespace["result"])
+        print(f"[python_runner.py][execute_user_code] end output={output}")
+        return output
+    default_message = "コードの実行が完了しました (result 変数は定義されていません)。"
+    print(f"[python_runner.py][execute_user_code] end output={default_message}")
+    return default_message
 
 
 def parse_args(argv: list[str] | None = None) -> SimpleNamespace:
     """Parse command line arguments."""
 
+    print(f"[python_runner.py][parse_args] start argv={argv}")
     parser = argparse.ArgumentParser(description="Execute Python code for the AutoGen tool")
     parser.add_argument(
         "payload",
@@ -42,15 +48,19 @@ def parse_args(argv: list[str] | None = None) -> SimpleNamespace:
     if not isinstance(payload, dict) or "code" not in payload:
         raise SystemExit("Payload must be a JSON object containing a 'code' field")
 
-    return SimpleNamespace(code=str(payload["code"]))
+    args = SimpleNamespace(code=str(payload["code"]))
+    print(f"[python_runner.py][parse_args] end args={args}")
+    return args
 
 
 def main(argv: list[str] | None = None) -> int:
     """Script entry point."""
 
+    print(f"[python_runner.py][main] start argv={argv}")
     args = parse_args(argv)
     output = execute_user_code(args.code)
     print(output)
+    print("[python_runner.py][main] end return=0")
     return 0
 
 
